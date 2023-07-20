@@ -1,0 +1,58 @@
+syntax = "proto3";
+
+package fabric;
+
+// Instructions annotated as (input0, input1) -> output.
+// Letters correspond to InstructionInOut::intype
+enum VPUOp {
+  VPU_OP_UNSPECIFIED = 0;
+
+  // ------------  System configuration
+  VPU_OP_LDP = 4;  // Load Prime to P Reg. (A) ->
+
+  // --------------- Basic Integer Arithmetic and memory ops
+  VPU_OP_ADD = 10; // Add Integers.       (R, R) -> R
+  VPU_OP_SUB = 11; // Subtract Integers.  (R, R) -> R
+  VPU_OP_MUL = 12; // Multiply Integers.  (R, R) -> R
+  VPU_OP_DIV = 13; // Divide Integers.    (R, R) -> R
+  VPU_OP_SET = 14; // Set Value to Reg.   (V)    -> R
+  VPU_OP_AND = 15; // Bitwise AND.        (R, R) -> R
+  VPU_OP_OR = 16;  // Bitwise OR.         (R, R) -> R
+  VPU_OP_NOT = 17; // Bitwise NOT.        (R)    -> R
+  VPU_OP_XOR = 18; // Bitwise XOR.        (R)    -> R
+
+  // -------------- Basic scratchpad
+  VPU_OP_LD = 50;  // Load SRAM to Reg.   (A) -> R
+  VPU_OP_ST = 51;  // Store Reg to SRAM.  (R) -> A
+
+  // --------------- Control Flow
+  VPU_OP_JAL = 75; // Jump and Link.      (L) -> R  ;   R will have return pc
+  VPU_OP_RET = 76; // Return              (R) ->    ;   Return to pc in R
+  VPU_OP_BEQ = 77; // Branch-if-equal     (R, R) -> (L)
+
+  // --------------- Prime Field Ops
+  // These ops will implicitly perform a modulo using the global P register
+  VPU_OP_ADDP = 100;  // Add in prime field.  (R, R) -> R
+  VPU_OP_SUBP = 101;  // Sub in prime field.  (R, R) -> R
+  VPU_OP_MULP = 102;  // Mul in prime field.  (R, R) -> R
+}
+
+message InstructionInOut {
+  oneof intype {
+    uint64 addr = 1;   // (A) scratchpad SRAM address
+    uint32 reg = 2;    // (R) register number (0-31)
+    int64 value = 3;  // (V) value, literal/immediate
+    string label = 4;  // (L) instruction label
+  }
+}
+
+message VPUInstruction {
+  VPUOp op = 1;
+  repeated InstructionInOut inputs = 2;
+  repeated InstructionInOut outputs = 3;
+  string label = 4;
+}
+
+message VPUProgram {
+  repeated VPUInstruction instr = 1;
+}
